@@ -1,5 +1,5 @@
 #---- survival analysis new ----
-# selective dissappearance for body temp + mass at each age
+# selective disappearance for body temp + mass at each age
 
 library(dplyr)
 library(MCMCglmm)
