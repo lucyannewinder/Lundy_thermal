@@ -6,6 +6,7 @@ library(MasterBayes)
 library(tidyr)
 library(survival)
 library(lubridate)
+library(beepr)
 
 #data set up
 Tb.dat<-read.csv("Tb.dat.csv")
@@ -63,20 +64,58 @@ prior_tb_age_new<-list(
   R=list(R1=list(V=diag(4)*1e-6, nu=5)),
   G=list(
     Brood.rearing=list(V=diag(3), nu=1, alpha.mu=rep(0,3), alpha.V=diag(3)*100),
-    Brood.rearing=list(V=diag(4), nu=1, alpha.mu=rep(0,4), alpha.V=diag(4)*100)
+    Brood.natal=list(V=diag(4), nu=1, alpha.mu=rep(0,4), alpha.V=diag(4)*100)
   )
 )
-a=1
+a=10
+#mex temp explained by age
 mod_tb_age_new<- MCMCglmm(max.temp~Age-1+
-                        Air.temp+
-                        factor(Year),
-                      random=~us(at.level(ages5to12,"yes"):Age):Brood.rearing+
-                        us(Age):Brood.natal,
-                      rcov= ~us(Age):ind.id,
-                      data=Tb.dat.na,
-                      nitt=23000*a,
-                      thin=10*a,
-                      burnin=300*a,
-                      family = "gaussian",
-                      prior = prior_tb_age_new, verbose=FALSE)
-summary(mod_tb_age_new)
+                            Air.temp+
+                            factor(Year),
+                          random=~us(at.level(ages5to12,"yes"):Age):Brood.rearing+
+                            us(Age):Brood.natal,
+                          rcov= ~us(Age):ind.id,
+                          data=Tb.dat.na,
+                          nitt=23000*a,
+                          thin=10*a,
+                          burnin=300*a,
+                          family = "gaussian",
+                          prior = prior_tb_age_new, verbose=FALSE)
+# #mex temp explained by age with mass interaction (controls for growth)
+# mod_tb_age_new<- MCMCglmm(max.temp~Age*Mass-1+
+#                         Air.temp+
+#                         factor(Year),
+#                       random=~us(at.level(ages5to12,"yes"):Age):Brood.rearing+
+#                         us(Age):Brood.natal,
+#                       rcov= ~us(Age):ind.id,
+#                       data=Tb.dat.na,
+#                       nitt=23000*a,
+#                       thin=10*a,
+#                       burnin=300*a,
+#                       family = "gaussian",
+#                       prior = prior_tb_age_new, verbose=FALSE)
+
+beep(1)
+summary(mod_tb_age_new) # posterior means/covariance from here
+
+post_vcv_tbage <- mod_tb_age_new$VCV
+
+#posteriors
+post_tbage_nat<-post_vcv_tbage[,grep("Brood.natal",colnames(post_vcv_tbage))]
+post_tbage_rear<-post_vcv_tbage[,grep("Brood.rearing",colnames(post_vcv_tbage))]
+post_tbage_res<-post_vcv_tbage[,grep("ind.id",colnames(post_vcv_tbage))]
+
+## proportion of variance explains by each level (very roughly)
+# get variances from these objects
+var_tbage_nat <- t(apply(post_tbage_nat/rowSums(post_tbage_nat),2,function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
+var_tbage_rear <- t(apply(post_tbage_rear/rowSums(post_tbage_rear),2,function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
+var_tbage_res <- t(apply(post_tbage_res/rowSums(post_tbage_res),2,function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
+
+post.tb.nat<-posterior.cor(post_tbage_nat)
+post.tb.rear<-posterior.cor(post_tbage_rear)
+post.tb.res<-posterior.cor(post_tbage_res)
+
+# get correlations from these objects
+tb.vars.nat<-t(apply(post.tb.nat, 2, function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
+tb.vars.rear<-t(apply(post.tb.rear, 2, function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
+tb.vars.res<-t(apply(post.tb.res, 2, function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
