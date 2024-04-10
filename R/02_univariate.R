@@ -210,3 +210,8 @@ save(
   file = "Data/Output/uni_models.Rdata")
 
 
+# cor(modM1_Tbher_2$VCV)
+# cor(modM1_Tbher_5$VCV)
+# cor(modM1_Tbher_10$VCV)
+# cor(modM1_Tbher_12$VCV)
+

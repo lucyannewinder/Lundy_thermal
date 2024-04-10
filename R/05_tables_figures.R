@@ -1,56 +1,56 @@
+rm(list=ls())
 
-post_summary <- function(x) {
-  out <- c(mean(x),quantile(x, c(0.5,0.025,0.975)))
-  names(out) <- c("mean","median","lCI","uCI")
-  out
+library(stringr)
+library(MCMCglmm)
+
+# setwd("~/github/Lundy_thermal")
+
+##function to get 'pvalues' from MCMC chain
+pMCMC <- function(x) 2*pmax(0.5/length(x), pmin(sum(x > 0)/length(x), 1 - sum(x > 0)/length(x)))
+
+## function to summarise a posterior distribution
+post_summary <- function(x,pMCMC=FALSE) {
+  y <- c(mean(x),quantile(x, c(0.5,0.025,0.975)))
+  names(y) <- c("mean","median","lCI","uCI")
+  if(pMCMC) y <- c(y,pMCMC=pMCMC(x))
+  y
 }
 
+## ------
+## Univariate Models 
+## ------
 
-## Univariate
 load("Data/Output/uni_models.Rdata")
 
+uni_day2 <- cbind(t(apply(mod_uni_day2$VCV/rowSums(mod_uni_day2$VCV),2,post_summary)),Age=2)
 
+uni_day5 <- cbind(t(apply(mod_uni_day5$VCV/rowSums(mod_uni_day5$VCV),2,post_summary)),Age=5)
 
-uni_day2 <- t(apply(mod_uni_day2$VCV/rowSums(mod_uni_day2$VCV),2,post_summary))
+uni_day10 <- cbind(t(apply(mod_uni_day10$VCV/rowSums(mod_uni_day10$VCV),2,post_summary)),Age=10)
 
-uni_day5 <- t(apply(mod_uni_day5$VCV/rowSums(mod_uni_day5$VCV),2,post_summary))
+uni_day12 <- cbind(t(apply(mod_uni_day12$VCV/rowSums(mod_uni_day12$VCV),2,post_summary)),Age=12)
 
-uni_day10 <- t(apply(mod_uni_day10$VCV/rowSums(mod_uni_day10$VCV),2,post_summary))
-
-uni_day12 <- t(apply(mod_uni_day12$VCV/rowSums(mod_uni_day12$VCV),2,post_summary))
-
-
-
-var_tbage_res <- t(apply(post_tbage_res/rowSums(post_tbage_res),2,function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
-
-
-
-
-
-
-
-
-
-cor(modM1_Tbher_2$VCV)
-cor(modM1_Tbher_5$VCV)
-cor(modM1_Tbher_10$VCV)
-cor(modM1_Tbher_12$VCV)
-
-
-
+prop_uni_all <- rbind(uni_day2,uni_day5,uni_day10,uni_day12)
+ 
+trait_names <- ifelse(rownames(prop_uni_all)=="BirdID","genetic",
+    ifelse(rownames(prop_uni_all)=="Brood.rearing","Rearing brood",
+      ifelse(rownames(prop_uni_all)=="Brood.natal","Natal brood",
+        ifelse(rownames(prop_uni_all)=="units","Residual",
+    NA))))
+variance.tempage <- data.frame(prop_uni_all,Trait=trait_names)
 
 ## ------
 #---- temp by age plot ----
 ## ------
 
 library(ggplot2)
-variance.tempage<-read.csv("Data/Output/variance.tempbyage.csv")
-str(variance.tempage)
-plot_tempage<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=Proportion.of.Variance,group=Trait,fill=Trait))+
+# variance.tempage<-read.csv("Data/Output/variance.tempbyage.csv")
+# str(variance.tempage)
+plot_tempage<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=median,group=Trait,fill=Trait))+
   geom_line(size=0.8,aes(linetype=Trait))+
   geom_point(size=3,shape=21,
              position=position_dodge(width=0.04))+
-  geom_errorbar(aes(ymin=l.ci,ymax=u.ci,colour=Trait),width=0.05,
+  geom_errorbar(aes(ymin=lCI,ymax=uCI,colour=Trait),width=0.05,
                 position=position_dodge(width=0.04))+
   theme_light()+
   theme(text=element_text(size=20),
@@ -62,35 +62,51 @@ plot_tempage
 
 
 
-#--------
-
+## ------
+## Multivariate Models 
+## ------
 
 load("Data/Output/multi_model.Rdata")
 
 
-post_vcv_tbage <- mod_tb_age_new$VCV
+post_multi <- mod_multi$VCV
+colnames(post_multi) <- gsub('at.level\\(ages5to12, \\"yes\\"\\):',"",colnames(post_multi))
 
-#posteriors
-post_tbage_nat<-post_vcv_tbage[,grep("Brood.natal",colnames(post_vcv_tbage))]
-post_tbage_rear<-post_vcv_tbage[,grep("Brood.rearing",colnames(post_vcv_tbage))]
-post_tbage_res<-post_vcv_tbage[,grep("BirdID",colnames(post_vcv_tbage))]
+## posteriors grouped by age
+post_multi_age2 <- post_multi[,which(str_count(colnames(post_multi),"Age2")==2)]
+post_multi_age5 <- post_multi[,which(str_count(colnames(post_multi),"Age5")==2)]
+post_multi_age10 <- post_multi[,which(str_count(colnames(post_multi),"Age10")==2)]
+post_multi_age12 <- post_multi[,which(str_count(colnames(post_multi),"Age12")==2)]
 
-## proportion of variance explains by each level (very roughly)
-# get variances from these objects
-var_tbage_nat <- t(apply(post_tbage_nat,2,function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
-var_tbage_rear <- t(apply(post_tbage_rear,2,function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
-var_tbage_res <- t(apply(post_tbage_res,2,function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
+#posteriors grouped by component
+post_multi_nat<-post_multi[,grep("Brood.natal",colnames(post_multi))]
+post_multi_rear<-post_multi[,grep("Brood.rearing",colnames(post_multi))]
+post_multi_res<-post_multi[,grep("BirdID",colnames(post_multi))]
 
-post.tb.nat<-posterior.cor(post_tbage_nat)
-post.tb.rear<-posterior.cor(post_tbage_rear)
-post.tb.res<-posterior.cor(post_tbage_res)
+### function to make covariance-correlation matrices
+cov_cor_matrix <- function(post_cov, round=3){
+  
+  matrix_size <-sqrt(ncol(post_cov))
+  
+  # get sunmmaries of (co)variances from posterior
+  cov_sum <- t(apply(post_cov,2,function(x) post_summary(as.mcmc(x),pMCMC=TRUE)))
+  covs_out <- matrix(paste0(round(cov_sum[,"median"],round)," (",round(cov_sum[,"lCI"],round),", ",round(cov_sum[,"uCI"],round),")"),ncol=matrix_size)
+  
+  # generate correlations and get summaries
+  post_cor <- posterior.cor(post_cov)
+  cor_sum <- t(apply(post_cor, 2, function(x) post_summary(as.mcmc(x),pMCMC=TRUE)))
+  cors_out <- matrix(paste0(round(cor_sum[,"median"],round)," (",round(cor_sum[,"lCI"],round),", ",round(cor_sum[,"uCI"],round),")"),ncol=matrix_size)
 
-# get correlations from these objects
-tb.vars.nat<-t(apply(post.tb.nat, 2, function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
-tb.vars.rear<-t(apply(post.tb.rear, 2, function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
-tb.vars.res<-t(apply(post.tb.res, 2, function(x) mean_CI(as.mcmc(x),pMCMC=TRUE)))
+  # make a covariance (lower Tri)/ correlation (upper tri) matrix, with variances on the diagonal
+  out <- matrix(NA,matrix_size,matrix_size)
+  out[upper.tri(out)] <- cors_out[upper.tri(cors_out)]
+  out[lower.tri(out,diag=TRUE)] <- covs_out[lower.tri(covs_out,diag=TRUE)]
+  out
 
-
+}
+cov_cor_matrix(post_multi_nat)
+cov_cor_matrix(post_multi_rear)
+cov_cor_matrix(post_multi_res)
 
 
 
