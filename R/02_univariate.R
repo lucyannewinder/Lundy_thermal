@@ -29,6 +29,7 @@ Age2.tb<-droplevels(Age2.tb)
 
 # add brood size
 # does every chick have a record? is the number of phenotyped chicks a good measure of brood size?
+# L - yes except the 16 individuals that were removed so I will change this to add in those individuals.
 Age2.tb <- Age2.tb %>%
   group_by(Brood.natal) %>%
   mutate(Natal_brood_size = n())
