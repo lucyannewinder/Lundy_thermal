@@ -30,7 +30,8 @@ Tb.dat<-merge(Tb.dat1,age2.nat.cf,by="BirdID")
 
 nrow(Tb.dat1)
 nrow(Tb.dat)
-## why is there a different number of rows here?
+## why is there a different number of rows here? 
+## L - this is removing birds that don't have a day 2 record. Basically these are individuals who hatched later than the rest of the brood.
 
 Tb.dat$BirdID<-as.character(Tb.dat$BirdID)
 
