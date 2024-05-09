@@ -27,17 +27,26 @@ Age5.tbsurv$survnew<-ifelse(Age5.tbsurv$surv==1,0,1)
 Age10.tbsurv$survnew<-ifelse(Age10.tbsurv$surv==1,0,1)
 Age12.tbsurv$survnew<-ifelse(Age12.tbsurv$surv==1,0,1)
 
+# mean center covariates used in models 
+Age2.tbsurv$max.tempC <- scale(Age2.tbsurv$max.temp, scale=FALSE)
+Age5.tbsurv$max.tempC <- scale(Age5.tbsurv$max.temp, scale=FALSE)
+Age10.tbsurv$max.tempC <- scale(Age10.tbsurv$max.temp, scale=FALSE)
+Age12.tbsurv$max.tempC <- scale(Age12.tbsurv$max.temp, scale=FALSE)
+Age2.tbsurv$MassC <- scale(Age2.tbsurv$Mass, scale=FALSE)
+Age5.tbsurv$MassC <- scale(Age5.tbsurv$Mass, scale=FALSE)
+Age10.tbsurv$MassC <- scale(Age10.tbsurv$Mass, scale=FALSE)
+Age12.tbsurv$MassC <- scale(Age12.tbsurv$Mass, scale=FALSE)
 
-mod_age2_tbsurv<-glmer(survnew~max.temp+
-                         Mass+
+mod_age2_tbsurv<-glmer(survnew~max.tempC+
+                         MassC+
                          as.factor(Year)+
                          (1|Brood.natal),
                        data=Age2.tbsurv,
                        family = "binomial")
 summary(mod_age2_tbsurv)
 
-mod_age5_tbsurv<-glmer(survnew~max.temp+
-                         Mass+
+mod_age5_tbsurv<-glmer(survnew~max.tempC+
+                         MassC+
                          as.factor(Year)+
                          (1|Brood.natal)+
                          (1|Brood.rearing),
@@ -45,8 +54,8 @@ mod_age5_tbsurv<-glmer(survnew~max.temp+
                        family = "binomial")
 summary(mod_age5_tbsurv)
 
-mod_age10_tbsurv<-glmer(survnew~max.temp+
-                          Mass+
+mod_age10_tbsurv<-glmer(survnew~max.tempC+
+                          MassC+
                           as.factor(Year)+
                           (1|Brood.natal)+
                           (1|Brood.rearing),
@@ -54,8 +63,8 @@ mod_age10_tbsurv<-glmer(survnew~max.temp+
                         family = "binomial")
 summary(mod_age10_tbsurv)
 
-mod_age12_tbsurv<-glmer(survnew~max.temp+
-                          Mass+
+mod_age12_tbsurv<-glmer(survnew~max.tempC+
+                          MassC+
                           as.factor(Year)+
                           (1|Brood.natal)+
                           (1|Brood.rearing),
