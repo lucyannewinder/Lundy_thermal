@@ -32,7 +32,7 @@ uni_day12 <- cbind(t(apply(mod_uni_day12$VCV/rowSums(mod_uni_day12$VCV),2,post_s
 
 prop_uni_all <- rbind(uni_day2,uni_day5,uni_day10,uni_day12)
  
-trait_names <- ifelse(rownames(prop_uni_all)=="BirdID","genetic",
+trait_names <- ifelse(rownames(prop_uni_all)=="BirdID","Genetic",
     ifelse(rownames(prop_uni_all)=="Brood.rearing","Rearing brood",
       ifelse(rownames(prop_uni_all)=="Brood.natal","Natal brood",
         ifelse(rownames(prop_uni_all)=="units","Residual",
@@ -46,6 +46,10 @@ variance.tempage <- data.frame(prop_uni_all,Trait=trait_names)
 library(ggplot2)
 # variance.tempage<-read.csv("Data/Output/variance.tempbyage.csv")
 # str(variance.tempage)
+
+variance.tempage$Trait<-ifelse(variance.tempage$Age==2 & variance.tempage$Trait == "Natal brood", "Bood", variance.tempage$Trait)
+
+# version 1 - combined plot
 plot_tempage<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=median,group=Trait,fill=Trait))+
   geom_line(size=0.8,aes(linetype=Trait))+
   geom_point(size=3,shape=21,
@@ -60,7 +64,27 @@ plot_tempage<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=median,group
   ggtitle("Proportion of variance")
 plot_tempage
 
-
+#version 2 - faceted
+plot_tempage_facet<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=median,group=Trait,fill=Trait))+
+  geom_point(size=3,shape=21,
+             position=position_dodge(width=0.14))+
+  geom_errorbar(aes(ymin=lCI,ymax=uCI,colour=Trait),width=0.05,
+                position=position_dodge(width=0.14))+
+  scale_fill_manual(values=c("goldenrod","palegreen3","steelblue1","royalblue3","indianred"))+
+  scale_colour_manual(values=c("goldenrod","palegreen3","steelblue1","royalblue3","indianred"))+
+  theme_linedraw()+
+  theme(text=element_text(size=20),
+        legend.title=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_blank())+
+  ylab("Proportion of Variance")+
+  xlab("")+
+  facet_wrap("Age",nrow=1)+
+  geom_hline(yintercept = c(0,0.25,0.5,0.75), linetype=2,alpha=0.2)
+plot_tempage_facet
 
 ## ------
 ## Multivariate Models 
