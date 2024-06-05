@@ -42,7 +42,8 @@ mod_age2_tbsurv<-glmer(survnew~max.tempC+
                          as.factor(Year)+
                          (1|Brood.natal),
                        data=Age2.tbsurv,
-                       family = "binomial")
+                       family = "binomial",
+                       glmerControl(optimizer = "bobyqa"))
 summary(mod_age2_tbsurv)
 
 mod_age5_tbsurv<-glmer(survnew~max.tempC+
@@ -51,7 +52,8 @@ mod_age5_tbsurv<-glmer(survnew~max.tempC+
                          (1|Brood.natal)+
                          (1|Brood.rearing),
                        data=Age5.tbsurv,
-                       family = "binomial")
+                       family = "binomial",
+                       glmerControl(optimizer = "bobyqa"))
 summary(mod_age5_tbsurv)
 
 mod_age10_tbsurv<-glmer(survnew~max.tempC+
@@ -60,7 +62,8 @@ mod_age10_tbsurv<-glmer(survnew~max.tempC+
                           (1|Brood.natal)+
                           (1|Brood.rearing),
                         data=Age10.tbsurv,
-                        family = "binomial")
+                        family = "binomial",
+                       glmerControl(optimizer = "bobyqa"))
 summary(mod_age10_tbsurv)
 
 mod_age12_tbsurv<-glmer(survnew~max.tempC+
@@ -69,6 +72,7 @@ mod_age12_tbsurv<-glmer(survnew~max.tempC+
                           (1|Brood.natal)+
                           (1|Brood.rearing),
                         data=Age12.tbsurv,
-                        family = "binomial")
+                        family = "binomial",
+                       glmerControl(optimizer = "bobyqa"))
 summary(mod_age12_tbsurv)
 
