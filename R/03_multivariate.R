@@ -25,9 +25,10 @@ Tb.dat.na$ages5to12<-as.factor(Tb.dat.na$ages5to12)
 
 # mean center covariates used in models 
 Tb.dat.na$Air.tempC <- Tb.dat.na$Air.temp - mean(Tb.dat.na$Air.temp)
-Tb.dat.na$Currentage_brood_sizeC <- Tb.dat.na$Air.temp - mean(Tb.dat.na$Currentage_brood_size)
+Tb.dat.na$Currentage_brood_sizeC <- Tb.dat.na$Currentage_brood_size - mean(Tb.dat.na$Currentage_brood_size)
 #scale(Tb.dat.na$Air.temp, scale=FALSE)
 
+head(Tb.dat.na)
 
 
 Tb.ped.new<- prunePed(Tb.ped,unique(Tb.dat.na$BirdID), make.base = TRUE)
@@ -44,7 +45,7 @@ prior_Tb<-list(
     Brood.natal=list(V=diag(4), nu=1, alpha.mu=rep(0,4), alpha.V=diag(4)*100)
   )
 )
-a=3
+a=15
 
 ### ---------
 # Model 1  - multivariate model of max temp across ontogeny
@@ -75,7 +76,7 @@ summary(mod_multi)
 Tb.dat.na$MassC <- Tb.dat.na$Mass - mean(Tb.dat.na$Mass)
 
 mod_multi_mass <- MCMCglmm(max.temp~Age-1+
-                        Age:(MassC + Air.tempC + Year+ Currentage_brood_sizeC),
+                        Age:(MassC + Air.tempC + factor(Year)+ Currentage_brood_sizeC),
                       random=~us(at.level(ages5to12,"yes"):Age):Brood.rearing+
                         us(Age):Brood.natal,
                       rcov= ~us(Age):BirdID,
