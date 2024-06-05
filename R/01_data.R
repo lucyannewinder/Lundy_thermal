@@ -17,14 +17,7 @@ Tb.dat1<-read.csv("Data/Raw/Tb.dat.csv")
 str(Tb.dat1)
 Tb.dat1$Age<-as.factor(Tb.dat1$Age)
 
-#!!! calculate brood size here **!!!!
-
-# # add brood size
-# # does every chick have a record? is the number of phenotyped chicks a good measure of brood size?
-# Tb.dat1 <- Tb.dat1 %>%
-#   group_by(Age,Brood.natal) %>%
-#   mutate(Natal_brood_size = n())
-
+# change rearing brood for age 2
 # rearing brood is wrong in dataset for day 2 as it shows xfoster (which is at age 2)
 age2.nat.cf<-subset(Tb.dat1,Age==2) %>%
   dplyr::select(BirdID,
