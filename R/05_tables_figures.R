@@ -67,9 +67,9 @@ plot_tempage
 #version 2 - faceted
 plot_tempage_facet<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=median,group=Trait,fill=Trait))+
   geom_point(size=3,shape=21,
-             position=position_dodge(width=0.14))+
+             position=position_dodge(width=4))+
   geom_errorbar(aes(ymin=lCI,ymax=uCI,colour=Trait),width=0.05,
-                position=position_dodge(width=0.14))+
+                position=position_dodge(width=4))+
   scale_fill_manual(values=c("goldenrod","palegreen3","steelblue1","royalblue3","indianred"))+
   scale_colour_manual(values=c("goldenrod","palegreen3","steelblue1","royalblue3","indianred"))+
   theme_linedraw()+
