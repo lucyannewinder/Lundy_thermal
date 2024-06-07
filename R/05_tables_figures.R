@@ -92,8 +92,10 @@ plot_tempage_facet
 
 load("Data/Output/multi_model.Rdata")
 
-
+#model options mod_multi or mod_multi_mass - former without body mass effect and latter with
 post_multi <- mod_multi$VCV
+# post_multi <- mod_multi_mass$VCV
+
 colnames(post_multi) <- gsub('at.level\\(ages5to12, \\"yes\\"\\):',"",colnames(post_multi))
 
 ## posteriors grouped by age
