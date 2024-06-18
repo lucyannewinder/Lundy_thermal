@@ -47,7 +47,7 @@ library(ggplot2)
 # variance.tempage<-read.csv("Data/Output/variance.tempbyage.csv")
 # str(variance.tempage)
 
-variance.tempage$Trait<-ifelse(variance.tempage$Age==2 & variance.tempage$Trait == "Natal brood", "Bood", variance.tempage$Trait)
+variance.tempage$Trait<-ifelse(variance.tempage$Age==2 & variance.tempage$Trait == "Natal brood", "Brood", variance.tempage$Trait)
 
 # version 1 - combined plot
 plot_tempage<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=median,group=Trait,fill=Trait))+
