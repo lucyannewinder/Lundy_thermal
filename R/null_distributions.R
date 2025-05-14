@@ -75,8 +75,16 @@ nd_sims <- simulate_population(
 
 nd_data <- get_population_data(nd_sims,list=TRUE)
 
+
+prior_day2 <- list(
+  R=list(V=1, nu=0.002), 
+  G=list(
+    BirdID=list(V=1, nu=1, alpha.mu=0, alpha.V=1000),
+    Brood.natal=list(V=1, nu=1, alpha.mu=0, alpha.V=1000)
+  )
+)
 nd<-do.call(rbind,parallel::mclapply(1:length(nd_data),function(x){
-	a=4
+	a=5
 	mod <- MCMCglmm(y~Air_tempC + YearF + Currentage_brood_sizeC,
    random=~BirdID + Brood_natal,
    data=nd_data[[x]],
@@ -99,16 +107,7 @@ abline(v=post_medians["BirdID"],col="red")
 MDE<-quantile(nd[,"post_median"],0.95)
 MDE/sum(post_medians)
 plot(nd)
-mean(post_medians["BirdID"]<nd[,"post_median"])
 
-head(get_population_data(nd_sims))
-## run models half as long, in parallel.
-
-apply(mod_uni_day2$Sol,2,median)[1]
-apply(mod_uni_day2$VCV,2,median)
+p_value <- mean(post_medians["BirdID"]<nd[,"post_median"])
 
 
- 
-# apply(mod_uni_day2$VCV/rowSums(mod_uni_day2$VCV),2,quantile,c(0.025,0.5,0.975))
-
-# posterior.cor(mod_uni_day2$VCV)
