@@ -36,7 +36,8 @@ trait_names <- ifelse(rownames(prop_uni_all)=="BirdID","Genetic",
     ifelse(rownames(prop_uni_all)=="Brood.rearing","Rearing brood",
       ifelse(rownames(prop_uni_all)=="Brood.natal","Natal brood",
         ifelse(rownames(prop_uni_all)=="units","Residual",
-    NA))))
+               ifelse(rownames(prop_uni_all)=="doy","Date",
+    NA)))))
 variance.tempage <- data.frame(prop_uni_all,Trait=trait_names)
 
 ## ------
@@ -51,7 +52,7 @@ variance.tempage$Trait<-ifelse(variance.tempage$Age==2 & variance.tempage$Trait 
 
 # version 1 - combined plot
 plot_tempage<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=median,group=Trait,fill=Trait))+
-  geom_line(size=0.8,aes(linetype=Trait))+
+  geom_line(aes(linetype=Trait))+
   geom_point(size=3,shape=21,
              position=position_dodge(width=0.04))+
   geom_errorbar(aes(ymin=lCI,ymax=uCI,colour=Trait),width=0.05,
@@ -70,8 +71,8 @@ plot_tempage_facet<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=median
              position=position_dodge(width=4))+
   geom_errorbar(aes(ymin=lCI,ymax=uCI,colour=Trait),width=0.05,
                 position=position_dodge(width=4))+
-  scale_fill_manual(values=c("goldenrod","palegreen3","steelblue1","royalblue3","indianred"))+
-  scale_colour_manual(values=c("goldenrod","palegreen3","steelblue1","royalblue3","indianred"))+
+  scale_fill_manual(values=c("goldenrod","lightpink2","palegreen3","steelblue1","royalblue3","indianred"))+
+  scale_colour_manual(values=c("goldenrod","lightpink2","palegreen3","steelblue1","royalblue3","indianred"))+
   theme_linedraw()+
   theme(text=element_text(size=20),
         legend.title=element_blank(),
@@ -93,8 +94,8 @@ plot_tempage_facet
 load("Data/Output/multi_model.Rdata")
 
 #model options mod_multi or mod_multi_mass - former without body mass effect and latter with
-post_multi <- mod_multi$VCV
-# post_multi <- mod_multi_mass$VCV
+# post_multi <- mod_multi$VCV
+post_multi <- mod_multi_mass$VCV
 
 colnames(post_multi) <- gsub('at.level\\(ages5to12, \\"yes\\"\\):',"",colnames(post_multi))
 
@@ -133,24 +134,3 @@ cov_cor_matrix <- function(post_cov, round=3){
 cov_cor_matrix(post_multi_nat)
 cov_cor_matrix(post_multi_rear)
 cov_cor_matrix(post_multi_res)
-
-
-
-
-
-
-
-
-
-
-#--------
-survlabs<-c("Yes","No")
-surv.temp.2<-ggplot(data=Age12.tb,aes(x=as.factor(surv),y=max.temp))+
-  geom_boxplot()+
-  xlab("Survival")+
-  ylab("Maximum head temperature (ºC)")+
-  scale_x_discrete(labels=survlabs)+
-  theme_classic(base_size = 12)
-surv.temp.2+
-  ggtitle("Age 2")+theme_classic(plot.title = element_text(face="bold"))
-
