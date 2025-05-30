@@ -22,6 +22,7 @@ Tb.dat.na$Age<-as.factor(Tb.dat.na$Age)
 # Tb.dat.na$Year<-as.factor(Tb.dat.na$Year)
 Tb.dat.na$BirdID<-as.factor(Tb.dat.na$BirdID)
 Tb.dat.na$ages5to12<-as.factor(Tb.dat.na$ages5to12)
+Tb.dat.na$doy<-as.factor(Tb.dat.na$doy)
 
 # mean center covariates used in models 
 Tb.dat.na$Air.tempC <- Tb.dat.na$Air.temp - mean(Tb.dat.na$Air.temp)
@@ -42,7 +43,8 @@ prior_Tb<-list(
   R=list(R1=list(V=diag(4)*1e-6, nu=5)),
   G=list(
     Brood.rearing=list(V=diag(3), nu=1, alpha.mu=rep(0,3), alpha.V=diag(3)*100),
-    Brood.natal=list(V=diag(4), nu=1, alpha.mu=rep(0,4), alpha.V=diag(4)*100)
+    Brood.natal=list(V=diag(4), nu=1, alpha.mu=rep(0,4), alpha.V=diag(4)*100),
+    doy=list(V=1, nu=1, alpha.mu=0, alpha.V=1000)
   )
 )
 a=15
@@ -54,7 +56,8 @@ a=15
 mod_multi <- MCMCglmm(max.temp~Age-1+
                             Age:(Currentage_brood_sizeC+ Air.tempC+factor(Year)),
                           random=~us(at.level(ages5to12,"yes"):Age):Brood.rearing+
-                            us(Age):Brood.natal,
+                            us(Age):Brood.natal+
+                        doy,
                           rcov= ~us(Age):BirdID,
                           data=Tb.dat.na,
                           nitt=13000*a,
@@ -78,7 +81,8 @@ Tb.dat.na$MassC <- Tb.dat.na$Mass - mean(Tb.dat.na$Mass)
 mod_multi_mass <- MCMCglmm(max.temp~Age-1+
                         Age:(MassC + Air.tempC + factor(Year)+ Currentage_brood_sizeC),
                       random=~us(at.level(ages5to12,"yes"):Age):Brood.rearing+
-                        us(Age):Brood.natal,
+                        us(Age):Brood.natal+
+                        doy,
                       rcov= ~us(Age):BirdID,
                       data=Tb.dat.na,
                       nitt=13000*a,
