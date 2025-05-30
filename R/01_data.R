@@ -22,10 +22,13 @@ Tb.dat1$Age<-as.factor(Tb.dat1$Age)
 age2.nat.cf<-subset(Tb.dat1,Age==2) %>%
   dplyr::select(BirdID,
                 Brood.natal=Brood.code,
-                Brood.rearing=CF.brood.no)
+                Brood.rearing=CF.brood.no,
+                Date_chr=as.character("Date"))
 
 age2.nat.cf<-age2.nat.cf %>%
-  mutate(Brood.rearing=coalesce(Brood.rearing,Brood.natal))
+  mutate(Brood.rearing=coalesce(Brood.rearing,Brood.natal),
+         Date_parsed = as.Date(Date_chr, format = "%d/%m/%Y"),
+         doy=as.numeric(format(Date_parsed,"%j")))
 
 Tb.dat<-merge(Tb.dat1,age2.nat.cf,by="BirdID",all = TRUE)
 
@@ -58,7 +61,7 @@ Tb.dat.na<-Tb.dat[!is.na(Tb.dat$max.temp), ]
 nrow(Tb.dat.na)
 
 # just get columns we use
-Tb.dat.na<-Tb.dat.na[,c("BirdID","Brood.natal","Brood.rearing","Age","Year","Mass","max.temp","Air.temp","surv","Currentage_brood_size")]
+Tb.dat.na<-Tb.dat.na[,c("BirdID","Brood.natal","Brood.rearing","Age","Year","Mass","max.temp","Air.temp","surv","Currentage_brood_size","doy")]
 
 
 ## --------
@@ -79,4 +82,3 @@ Tb.ped<-orderPed(insertPed(Tb.ped,missing.birds))
 
 write.csv(Tb.ped,file="Data/Processed/ped_for_analysis.csv",row.names=FALSE)
 write.csv(Tb.dat.na,file="Data/Processed/data_for_analysis.csv",row.names=FALSE)
-
