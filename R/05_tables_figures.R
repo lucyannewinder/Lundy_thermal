@@ -134,3 +134,101 @@ cov_cor_matrix <- function(post_cov, round=3){
 cov_cor_matrix(post_multi_nat)
 cov_cor_matrix(post_multi_rear)
 cov_cor_matrix(post_multi_res)
+
+
+
+
+
+## ------
+## Survival Models 
+## ------
+
+load("Data/Output/surv_models.Rdata")
+
+# Function to create survival plots
+make_survival_plot <- function(data, model, age_label = "", plot_label = "") {
+  years <- levels(data$Year) #colour + predictions for each year separately in plot
+  
+  # Generate model predictions for predicted survival curve
+  newdata_list <- lapply(years, function(y) {
+    df <- data.frame(
+      max.tempC = seq(min(data$max.tempC, na.rm = TRUE),
+                      max(data$max.tempC, na.rm = TRUE),
+                      length.out = 100),
+      MassC = mean(data$MassC, na.rm = TRUE),
+      Year = factor(y, levels = levels(data$Year)),
+      Brood.natal = data$Brood.natal[1],
+      doy = data$doy[1]
+    )
+    
+    # Create matrix of predictions from model
+    X <- model.matrix(~ max.tempC + MassC + as.factor(Year), data = df)
+    betas <- fixef(model)
+    vcov_mat <- vcov(model)
+    df$logit <- X %*% betas
+    df$se <- sqrt(diag(X %*% vcov_mat %*% t(X)))
+    df$logit.lower <- df$logit - 1.96 * df$se
+    df$logit.upper <- df$logit + 1.96 * df$se
+    
+    # Convert from logit to predicted probabilities
+    invlogit <- function(x) exp(x) / (1 + exp(x))
+    df$fit <- invlogit(df$logit)
+    df$lower <- invlogit(df$logit.lower)
+    df$upper <- invlogit(df$logit.upper)
+    return(df)
+  })
+  
+  newdata_all <- do.call(rbind, newdata_list)
+  
+  # plot
+  
+  ggplot() +
+    geom_point(data = data,
+               aes(x = max.tempC, y = survnew, colour = Year),
+               position = position_jitter(width = 0, height = 0.08),
+               alpha = 0.4, size = 2) +
+    geom_line(data = newdata_all,
+              aes(x = max.tempC, y = fit, colour = Year),
+              size = 0.8) +
+    geom_ribbon(data = newdata_all,
+                aes(x = max.tempC, ymin = lower, ymax = upper, fill = Year),
+                alpha = 0.2) +
+    ylab("Survival") +
+    xlab("Mean centred body temperature (ºC)") +
+    ggtitle(paste0(plot_label, " Age ", age_label)) +
+    theme_light(base_size = 18) +
+    scale_y_continuous(breaks = c(0, 1), labels = c("0", "1")) +
+    scale_color_brewer(palette = "Set1") +
+    scale_fill_brewer(palette = "Set1")
+}
+
+survplot_age2 <- make_survival_plot(Age2.tbsurv, mod_age2_tbsurv, age_label = "2", plot_label = "A) ")
+survplot_age5 <- make_survival_plot(Age5.tbsurv, mod_age5_tbsurv, age_label = "5", plot_label = "B) ")
+survplot_age10 <- make_survival_plot(Age10.tbsurv, mod_age10_tbsurv, age_label = "10", plot_label = "C) ")
+survplot_age12 <- make_survival_plot(Age12.tbsurv, mod_age12_tbsurv, age_label = "12", plot_label = "D) ")
+
+
+survplot_age2_noleg<-survplot_age2  +theme(legend.position = "none")
+survplot_age5_noleg<-survplot_age5  +theme(legend.position = "none")
+survplot_age10_noleg<-survplot_age10 +theme(legend.position = "none")
+survplot_age12_noleg<-survplot_age12 +theme(legend.position = "none")
+
+legend_survplot <- get_legend(survplot_age2 + theme(legend.position = "right"))
+
+survplot_combined <- plot_grid(
+  survplot_age2_noleg, survplot_age5_noleg,
+  survplot_age10_noleg, survplot_age12_noleg,
+  labels = NULL,
+  ncol = 2
+)
+
+survplot_combinedleg <- plot_grid(
+  survplot_combined,
+  legend_survplot,
+  ncol = 2,
+  rel_heights = c(1, 0.1),
+  rel_widths = c(1,0.1)
+)
+survplot_combinedleg
+
+
