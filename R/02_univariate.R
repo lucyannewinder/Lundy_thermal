@@ -11,6 +11,7 @@ library(survival)
 library(lubridate)
 library(ggplot2)
 library(pedtricks)
+library(beepr)
 
 
 ## --------
@@ -52,16 +53,18 @@ prior_day2 <- list(
   R=list(V=1, nu=0.002), 
   G=list(
     BirdID=list(V=1, nu=1, alpha.mu=0, alpha.V=1000),
-    Brood.natal=list(V=1, nu=1, alpha.mu=0, alpha.V=1000)
+    Brood.natal=list(V=1, nu=1, alpha.mu=0, alpha.V=1000),
+    doy=list(V=1, nu=1, alpha.mu=0, alpha.V=1000)
   )
 )
 a=15
 
-mod_uni_day2 <- MCMCglmm(max.temp~Air.tempC+ #max.temp+273.15~Air.tempC+  #for conversion to kelvin to calculate evolvability
+mod_uni_day2 <- MCMCglmm(max.temp~Air.tempC+ #max.temp+273.15~Air.tempC+  #for conversion to kelvin to calculate evolvability 
                             as.factor(Year)+
                            Currentage_brood_sizeC,
                      random=~BirdID+
-                       Brood.natal,
+                       Brood.natal+
+                       doy,
                      data=Age2.tb,
                      nitt=13000*a, thin=10*a, burnin=3000*a, 
                      ginverse=list(BirdID=day2.Ainv), prior=prior_day2, verbose=FALSE)
@@ -97,16 +100,18 @@ prior_day5plus<-list(
   G=list(
     BirdID=list(V=1, nu=1, alpha.mu=0, alpha.V=1000),
     Brood.natal=list(V=1, nu=1, alpha.mu=0, alpha.V=1000),
-    Brood.rearing=list(V=1, nu=1, alpha.mu=0, alpha.V=1000)
+    Brood.rearing=list(V=1, nu=1, alpha.mu=0, alpha.V=1000),
+    doy=list(V=1, nu=1, alpha.mu=0, alpha.V=1000)
   )
 )
 
-mod_uni_day5 <- MCMCglmm(max.temp~Air.tempC+ #max.temp+273.15~Air.tempC+  #for conversion to kelvin to calculate evolvability
+mod_uni_day5 <- MCMCglmm(max.temp~Air.tempC+ #max.temp+273.15~Air.tempC+  #for conversion to kelvin to calculate evolvability  
                             as.factor(Year)+
                            Currentage_brood_sizeC,
                           random=~BirdID+ 
                             Brood.rearing+
-                            Brood.natal,
+                            Brood.natal+
+                           doy,
                           data=Age5.tb,
                           nitt=13000*a, thin=10*a, burnin=3000*a, 
                           ginverse=list(BirdID=day5.Ainv), prior=prior_day5plus, verbose=FALSE)
@@ -136,12 +141,13 @@ Tb.ped.day10<- prunePed(Tb.ped,unique(Age10.tb$BirdID), make.base = TRUE)
 day10.Ainv<-inverseA(Tb.ped.day10)$Ainv
 
 
-mod_uni_day10 <- MCMCglmm(max.temp~Air.tempC+ #max.temp+273.15~Air.tempC+  #for conversion to kelvin to calculate evolvability
+mod_uni_day10 <- MCMCglmm(max.temp~Air.tempC+ #max.temp+273.15~Air.tempC+  #for conversion to kelvin to calculate evolvability.  
                             as.factor(Year)+
                             Currentage_brood_sizeC,
                           random=~BirdID+ 
                             Brood.rearing+
-                            Brood.natal,
+                            Brood.natal+
+                            doy,
                           data=Age10.tb,
                           nitt=13000*a, thin=10*a, burnin=3000*a, 
                           ginverse=list(BirdID=day10.Ainv), prior=prior_day5plus, verbose=FALSE)
@@ -172,12 +178,13 @@ Tb.ped.day12<- prunePed(Tb.ped,unique(Age12.tb$BirdID), make.base = TRUE)
 day12.Ainv<-inverseA(Tb.ped.day12)$Ainv
 
 
-mod_uni_day12 <- MCMCglmm(max.temp~Air.tempC+ #max.temp+273.15~Air.tempC+  #for conversion to kelvin to calculate evolvability
+mod_uni_day12 <- MCMCglmm(max.temp~Air.tempC+ #max.temp+273.15~Air.tempC+  #for conversion to kelvin to calculate evolvability.  
                             as.factor(Year)+
                             Currentage_brood_sizeC,
                           random=~BirdID+ 
                             Brood.rearing+
-                            Brood.natal,
+                            Brood.natal+
+                            doy,
                           data=Age12.tb,
                           nitt=13000*a, thin=10*a, burnin=3000*a, 
                           ginverse=list(BirdID=day12.Ainv), prior=prior_day5plus, verbose=FALSE)
@@ -186,7 +193,7 @@ summary(mod_uni_day12)
 
 
 
-#evolvability
+#evolvability - change above models so max.temp+273.15 to convert to K.
 e_age2<- (mean(mod_uni_day2$VCV[,"BirdID"]))/(mean(Age2.tb$max.temp+273.15,na.rm=TRUE))^2
 e_age5<- (mean(mod_uni_day5$VCV[,"BirdID"]))/(mean(Age5.tb$max.temp+273.15,na.rm=TRUE))^2
 e_age10<- (mean(mod_uni_day10$VCV[,"BirdID"]))/(mean(Age10.tb$max.temp+273.15,na.rm=TRUE))^2
