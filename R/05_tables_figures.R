@@ -50,29 +50,15 @@ library(ggplot2)
 
 variance.tempage$Trait<-ifelse(variance.tempage$Age==2 & variance.tempage$Trait == "Natal brood", "Brood", variance.tempage$Trait)
 
-# version 1 - combined plot
-plot_tempage<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=median,group=Trait,fill=Trait))+
-  geom_line(aes(linetype=Trait))+
-  geom_point(size=3,shape=21,
-             position=position_dodge(width=0.04))+
-  geom_errorbar(aes(ymin=lCI,ymax=uCI,colour=Trait),width=0.05,
-                position=position_dodge(width=0.04))+
-  theme_light()+
-  theme(text=element_text(size=20),
-        legend.title=element_blank())+
-  xlab("Age")+
-  ylab("Proportion of Variance")+
-  ggtitle("Proportion of variance")
-plot_tempage
 
-#version 2 - faceted
+#plot
 plot_tempage_facet<-ggplot(data = variance.tempage,aes(x=as.factor(Age),y=median,group=Trait,fill=Trait))+
   geom_point(size=3,shape=21,
              position=position_dodge(width=4))+
   geom_errorbar(aes(ymin=lCI,ymax=uCI,colour=Trait),width=0.05,
                 position=position_dodge(width=4))+
-  scale_fill_manual(values=c("goldenrod","lightpink2","palegreen3","steelblue1","royalblue3","indianred"))+
-  scale_colour_manual(values=c("goldenrod","lightpink2","palegreen3","steelblue1","royalblue3","indianred"))+
+  scale_fill_manual(values=c("goldenrod","darkred","palegreen3","steelblue1","royalblue3","indianred1"))+
+  scale_colour_manual(values=c("goldenrod","darkred","palegreen3","steelblue1","royalblue3","indianred1"))+
   theme_linedraw()+
   theme(text=element_text(size=20),
         legend.title=element_blank(),
@@ -134,7 +120,6 @@ cov_cor_matrix <- function(post_cov, round=3){
 cov_cor_matrix(post_multi_nat)
 cov_cor_matrix(post_multi_rear)
 cov_cor_matrix(post_multi_res)
-
 
 
 
@@ -230,5 +215,3 @@ survplot_combinedleg <- plot_grid(
   rel_widths = c(1,0.1)
 )
 survplot_combinedleg
-
-
