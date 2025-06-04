@@ -130,62 +130,86 @@ cov_cor_matrix(post_multi_res)
 
 load("Data/Output/surv_models.Rdata")
 
+
 # Function to create survival plots
 make_survival_plot <- function(data, model, age_label = "", plot_label = "") {
-  years <- levels(data$Year) #colour + predictions for each year separately in plot
-  
+
   # Generate model predictions for predicted survival curve
-  newdata_list <- lapply(years, function(y) {
-    df <- data.frame(
+  newdata <- data.frame(
       max.tempC = seq(min(data$max.tempC, na.rm = TRUE),
                       max(data$max.tempC, na.rm = TRUE),
                       length.out = 100),
       MassC = mean(data$MassC, na.rm = TRUE),
-      Year = factor(y, levels = levels(data$Year)),
+      Year = factor("2018", levels = levels(data$Year)),
       Brood.natal = data$Brood.natal[1],
       doy = data$doy[1]
     )
     
     # Create matrix of predictions from model
-    X <- model.matrix(~ max.tempC + MassC + as.factor(Year), data = df)
+    X <- model.matrix(~ max.tempC + MassC + as.factor(Year), data = newdata)
     betas <- fixef(model)
     vcov_mat <- vcov(model)
-    df$logit <- X %*% betas
-    df$se <- sqrt(diag(X %*% vcov_mat %*% t(X)))
-    df$logit.lower <- df$logit - 1.96 * df$se
-    df$logit.upper <- df$logit + 1.96 * df$se
+    newdata$logit <- X %*% betas
+    newdata$se <- sqrt(diag(X %*% vcov_mat %*% t(X)))
+    newdata$logit.lower <- newdata$logit - 1.96 * newdata$se
+    newdata$logit.upper <- newdata$logit + 1.96 * newdata$se
     
     # Convert from logit to predicted probabilities
     invlogit <- function(x) exp(x) / (1 + exp(x))
-    df$fit <- invlogit(df$logit)
-    df$lower <- invlogit(df$logit.lower)
-    df$upper <- invlogit(df$logit.upper)
-    return(df)
-  })
+    newdata$fit <- invlogit(newdata$logit)
+    newdata$lower <- invlogit(newdata$logit.lower)
+    newdata$upper <- invlogit(newdata$logit.upper)
   
-  newdata_all <- do.call(rbind, newdata_list)
   
   # plot
   
   ggplot() +
     geom_point(data = data,
-               aes(x = max.tempC, y = survnew, colour = Year),
-               position = position_jitter(width = 0, height = 0.08),
-               alpha = 0.4, size = 2) +
-    geom_line(data = newdata_all,
-              aes(x = max.tempC, y = fit, colour = Year),
+               aes(x = max.tempC, y = survnew),
+               position = position_jitter(width = 0, height = 0.1),
+               alpha = 0.3, size = 2) +
+    geom_line(data = newdata,
+              aes(x = max.tempC, y = fit),
               size = 0.8) +
-    geom_ribbon(data = newdata_all,
-                aes(x = max.tempC, ymin = lower, ymax = upper, fill = Year),
+    geom_ribbon(data = newdata,
+                aes(x = max.tempC, ymin = lower, ymax = upper),
                 alpha = 0.2) +
     ylab("Survival") +
     xlab("Mean centred body temperature (ºC)") +
     ggtitle(paste0(plot_label, " Age ", age_label)) +
     theme_light(base_size = 18) +
-    scale_y_continuous(breaks = c(0, 1), labels = c("0", "1")) +
-    scale_color_brewer(palette = "Set1") +
-    scale_fill_brewer(palette = "Set1")
+    scale_y_continuous(breaks = c(0, 1), labels = c("0", "1"))
 }
+
+Tb.dat.na <- read.csv("Data/Processed/data_for_analysis.csv")
+Tb.dat.na$Year<-as.factor(Tb.dat.na$Year)
+
+
+# subset into ages
+Age2.tbsurv<-subset(Tb.dat.na,Age==2)
+Age2.tbsurv<-droplevels(Age2.tbsurv)
+Age5.tbsurv<-subset(Tb.dat.na,Age==5)
+Age5.tbsurv<-droplevels(Age5.tbsurv)
+Age10.tbsurv<-subset(Tb.dat.na,Age==10)
+Age10.tbsurv<-droplevels(Age10.tbsurv)
+Age12.tbsurv<-subset(Tb.dat.na,Age==12)
+Age12.tbsurv<-droplevels(Age12.tbsurv)
+
+# change survival so 1=alive next year 0=dead (currently other way around)
+Age2.tbsurv$survnew<-ifelse(Age2.tbsurv$surv==1,0,1)
+Age5.tbsurv$survnew<-ifelse(Age5.tbsurv$surv==1,0,1)
+Age10.tbsurv$survnew<-ifelse(Age10.tbsurv$surv==1,0,1)
+Age12.tbsurv$survnew<-ifelse(Age12.tbsurv$surv==1,0,1)
+
+# mean center covariates used in models 
+Age2.tbsurv$max.tempC <- scale(Age2.tbsurv$max.temp, scale=FALSE)
+Age5.tbsurv$max.tempC <- scale(Age5.tbsurv$max.temp, scale=FALSE)
+Age10.tbsurv$max.tempC <- scale(Age10.tbsurv$max.temp, scale=FALSE)
+Age12.tbsurv$max.tempC <- scale(Age12.tbsurv$max.temp, scale=FALSE)
+Age2.tbsurv$MassC <- scale(Age2.tbsurv$Mass, scale=FALSE)
+Age5.tbsurv$MassC <- scale(Age5.tbsurv$Mass, scale=FALSE)
+Age10.tbsurv$MassC <- scale(Age10.tbsurv$Mass, scale=FALSE)
+Age12.tbsurv$MassC <- scale(Age12.tbsurv$Mass, scale=FALSE)
 
 survplot_age2 <- make_survival_plot(Age2.tbsurv, mod_age2_tbsurv, age_label = "2", plot_label = "A) ")
 survplot_age5 <- make_survival_plot(Age5.tbsurv, mod_age5_tbsurv, age_label = "5", plot_label = "B) ")
@@ -193,25 +217,13 @@ survplot_age10 <- make_survival_plot(Age10.tbsurv, mod_age10_tbsurv, age_label =
 survplot_age12 <- make_survival_plot(Age12.tbsurv, mod_age12_tbsurv, age_label = "12", plot_label = "D) ")
 
 
-survplot_age2_noleg<-survplot_age2  +theme(legend.position = "none")
-survplot_age5_noleg<-survplot_age5  +theme(legend.position = "none")
-survplot_age10_noleg<-survplot_age10 +theme(legend.position = "none")
-survplot_age12_noleg<-survplot_age12 +theme(legend.position = "none")
-
-legend_survplot <- get_legend(survplot_age2 + theme(legend.position = "right"))
 
 survplot_combined <- plot_grid(
-  survplot_age2_noleg, survplot_age5_noleg,
-  survplot_age10_noleg, survplot_age12_noleg,
+  survplot_age2, survplot_age5,
+  survplot_age10, survplot_age12,
   labels = NULL,
   ncol = 2
 )
 
-survplot_combinedleg <- plot_grid(
-  survplot_combined,
-  legend_survplot,
-  ncol = 2,
-  rel_heights = c(1, 0.1),
-  rel_widths = c(1,0.1)
-)
-survplot_combinedleg
+survplot_combined
+
