@@ -76,3 +76,10 @@ mod_age12_tbsurv<-glmer(survnew~max.tempC+
                        glmerControl(optimizer = "bobyqa"))
 summary(mod_age12_tbsurv)
 
+
+save(
+  mod_age2_tbsurv,
+  mod_age5_tbsurv,
+  mod_age10_tbsurv,
+  mod_age12_tbsurv,
+  file = "Data/Output/surv_models.Rdata")
