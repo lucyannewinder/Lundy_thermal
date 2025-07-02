@@ -2,7 +2,7 @@ rm(list=ls())
 
 library(dplyr)
 library(MCMCglmm)
-library(MasterBayes)
+library(pedtricks)
 library(tidyr)
 library(survival)
 library(lubridate)
@@ -71,9 +71,10 @@ Tb.dat.na<-Tb.dat.na[,c("BirdID","Brood.natal","Brood.rearing","Age","Year","Mas
 Tb.ped<-read.csv("Data/Raw/pedto19_new.csv")[,1:3]
 colnames(Tb.ped)[1] <- "BirdID"
 
-# add in missing parents
-missing.birds<-unique(Tb.dat.na$BirdID[which(!Tb.dat.na$BirdID%in%Tb.ped[,1])])
-Tb.ped<-orderPed(insertPed(Tb.ped,missing.birds))
+# add in birds not already in pedigree
+missing.birds<-cbind(unique(Tb.dat.na$BirdID[which(!Tb.dat.na$BirdID%in%Tb.ped[,1])]),NA,NA)
+colnames(missing.birds)<-colnames(Tb.ped)
+Tb.ped<-fix_ped(rbind(Tb.ped,missing.birds))
 
 
 ## --------
