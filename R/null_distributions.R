@@ -344,14 +344,35 @@ save(
 %%%%%%%%%%%%%%%%%%%%%%
 
 
+load("Data/Output/uni_models_nd2.Rdata")
+post_medians2 <-apply(mod_uni_day2$VCV,2,median)
 
 
-hist(nd[,"post_median"], breaks=100)
-abline(v=post_medians["BirdID"],col="red")
-MDE<-quantile(nd[,"post_median"],0.95)
-MDE/sum(post_medians)
-plot(nd)
+hist(nd2[,"post_median"], breaks=100)
+abline(v=post_medians2["BirdID"],col="red")
+MDE2<-quantile(nd2[,"post_median"],0.95)
+MDE2/sum(post_medians2)
+plot(nd2)
 
-p_value <- mean(post_medians["BirdID"]<nd[,"post_median"])
+p_value2 <- mean(post_medians2["BirdID"]<nd2[,"post_median"])
+p_value2
+
+post_medians2[1]/sum(post_medians2)
 
 
+
+
+load("Data/Output/uni_models_nd5.Rdata")
+post_medians5 <-apply(mod_uni_day5$VCV,2,median)
+
+
+hist(nd5[,"post_median"], breaks=100)
+abline(v=post_medians5["BirdID"],col="red")
+MDE5<-quantile(nd5[,"post_median"],0.95)
+MDE2/sum(post_medians5)
+plot(nd5)
+
+p_value5 <- mean(post_medians5["BirdID"]<nd5[,"post_median"])
+p_value5
+
+post_medians5[1]/sum(post_medians5)
