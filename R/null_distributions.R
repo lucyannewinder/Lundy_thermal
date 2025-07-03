@@ -25,6 +25,16 @@ Tb.dat.na$BirdID<-as.factor(Tb.dat.na$BirdID)
 Tb.dat.na$doy<-as.factor(Tb.dat.na$doy)
 Tb.dat.na$YearF <- as.factor(Tb.dat.na$Year)
 
+post_medians2 <-apply(mod_uni_day2$VCV,2,median)
+post_medians5 <-apply(mod_uni_day5$VCV,2,median)
+post_medians10 <-apply(mod_uni_day10$VCV,2,median)
+post_medians12 <-apply(mod_uni_day12$VCV,2,median)
+
+run <- FALSE ## Rerun all simulations?
+
+
+if(run){
+
 ## ---------
 ## DAY 2 model
 ## ---------
@@ -36,19 +46,16 @@ Age2.tb<-droplevels(Age2.tb)
 ## remove bird not in pedigree
 Age2.tb <- as.data.frame(subset(Age2.tb, BirdID != "10179"))
 
-# mean center covariates used in models 
+# mean centre covariates used in models 
 Age2.tb$Air.tempC <- scale(Age2.tb$Air.temp, scale=FALSE)
 Age2.tb$Currentage_brood_sizeC <- scale(Age2.tb$Currentage_brood_size, scale=FALSE)
 
 colnames(Age2.tb)<-gsub("\\.","_",colnames(Age2.tb))
 
-# summary(mod_uni_day2)
-# hist(mod_uni_day2$VCV[,1], breaks=100)
-
-post_medians2 <-apply(mod_uni_day2$VCV,2,median)
-
+## get model predictors
 preds2 <-model.matrix(~Air_tempC + YearF + Currentage_brood_sizeC,Age2.tb)[,-1]
 
+## 
 nd_sims2 <- simulate_population(
 	data_structure=Age2.tb[,c("BirdID", "Brood_natal", "Brood_rearing","doy","YearF")],
 	parameters=list(
@@ -122,7 +129,6 @@ Age5.tb$Currentage_brood_sizeC <- scale(Age5.tb$Currentage_brood_size, scale=FAL
 colnames(Age5.tb)<-gsub("\\.","_",colnames(Age5.tb))
 
 # simulate new datasets with no Va, adding Va to residual variance
-post_medians5<-apply(mod_uni_day5$VCV,2,median)
 
 preds5<-model.matrix(~Air_tempC + YearF + Currentage_brood_sizeC,Age5.tb)[,-1]
 
@@ -200,7 +206,6 @@ Age10.tb$Currentage_brood_sizeC <- scale(Age10.tb$Currentage_brood_size, scale=F
 colnames(Age10.tb)<-gsub("\\.","_",colnames(Age10.tb))
 
 # simulate new datasets with no Va, adding Va to residual variance
-post_medians10<-apply(mod_uni_day10$VCV,2,median)
 
 preds10<-model.matrix(~Air_tempC + YearF + Currentage_brood_sizeC,Age10.tb)[,-1]
 
@@ -280,7 +285,6 @@ Age12.tb$Currentage_brood_sizeC <- scale(Age12.tb$Currentage_brood_size, scale=F
 colnames(Age12.tb)<-gsub("\\.","_",colnames(Age12.tb))
 
 # simulate new datasets with no Va, adding Va to residual variance
-post_medians12<-apply(mod_uni_day12$VCV,2,median)
 
 preds12<-model.matrix(~Air_tempC + YearF + Currentage_brood_sizeC,Age12.tb)[,-1]
 
@@ -339,40 +343,73 @@ save(
 
 
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%
-
+}else{
 
 load("Data/Output/uni_models_nd2.Rdata")
-post_medians2 <-apply(mod_uni_day2$VCV,2,median)
-
-
-hist(nd2[,"post_median"], breaks=100)
-abline(v=post_medians2["BirdID"],col="red")
-MDE2<-quantile(nd2[,"post_median"],0.95)
-MDE2/sum(post_medians2)
-plot(nd2)
-
-p_value2 <- mean(post_medians2["BirdID"]<nd2[,"post_median"])
-p_value2
-
-post_medians2[1]/sum(post_medians2)
-
-
-
-
 load("Data/Output/uni_models_nd5.Rdata")
-post_medians5 <-apply(mod_uni_day5$VCV,2,median)
+load("Data/Output/uni_models_nd10.Rdata")
+load("Data/Output/uni_models_nd12.Rdata")
+
+}
+
+### -----
+### Generating p-values 
+### -----
 
 
-hist(nd5[,"post_median"], breaks=100)
+## null distributions
+par(mfrow=c(2,2))
+hist(nd2[,"post_median"], breaks=100, main="day 2")
+abline(v=post_medians2["BirdID"],col="red")
+
+hist(nd5[,"post_median"], breaks=100, main="day 5")
 abline(v=post_medians5["BirdID"],col="red")
-MDE5<-quantile(nd5[,"post_median"],0.95)
-MDE2/sum(post_medians5)
-plot(nd5)
 
+hist(nd10[,"post_median"], breaks=100, main="day 10")
+abline(v=post_medians10["BirdID"],col="red")
+
+hist(nd12[,"post_median"], breaks=100, main="day 12")
+abline(v=post_medians12["BirdID"],col="red")
+
+## p values
+p_value2 <- mean(post_medians2["BirdID"]<nd2[,"post_median"])
 p_value5 <- mean(post_medians5["BirdID"]<nd5[,"post_median"])
-p_value5
+p_value10 <- mean(post_medians10["BirdID"]<nd10[,"post_median"])
+p_value12 <- mean(post_medians12["BirdID"]<nd12[,"post_median"])
 
-post_medians5[1]/sum(post_medians5)
+## minimum detectable effect
+MDE2<-quantile(nd2[,"post_median"],0.95)
+MDE5<-quantile(nd5[,"post_median"],0.95)
+MDE10<-quantile(nd10[,"post_median"],0.95)
+MDE12<-quantile(nd12[,"post_median"],0.95)
+
+
+## summary table
+cbind(
+	pvalue=c(
+		day2=p_value2,
+		day5=p_value5,
+		day10=p_value10,
+		day12=p_value12
+	),
+	MDE=c(
+		MDE2/sum(post_medians2),
+		MDE5/sum(post_medians5),
+		MDE10/sum(post_medians10),
+		MDE12/sum(post_medians12)
+	),
+	observed=c(
+		post_medians2[1]/sum(post_medians2),
+		post_medians5[1]/sum(post_medians5),
+		post_medians10[1]/sum(post_medians10),
+		post_medians12[1]/sum(post_medians12)
+	)
+)
+
+
+## relationship between effective sample size and 
+par(mfrow=c(2,2))
+plot(nd2)
+plot(nd5)
+plot(nd10)
+plot(nd12)
