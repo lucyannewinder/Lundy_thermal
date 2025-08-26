@@ -2,7 +2,7 @@ rm(list=ls())
 
 library(dplyr)
 library(MCMCglmm)
-library(pedtricks)
+library(MasterBayes)
 library(tidyr)
 library(survival)
 library(lubridate)
@@ -22,15 +22,17 @@ Tb.dat1$Age<-as.factor(Tb.dat1$Age)
 age2.nat.cf<-subset(Tb.dat1,Age==2) %>%
   dplyr::select(BirdID,
                 Brood.natal=Brood.code,
-                Brood.rearing=CF.brood.no,
-                Date_chr=as.character("Date"))
+                Brood.rearing=CF.brood.no)
 
 age2.nat.cf<-age2.nat.cf %>%
-  mutate(Brood.rearing=coalesce(Brood.rearing,Brood.natal),
-         Date_parsed = as.Date(Date_chr, format = "%d/%m/%Y"),
-         doy=as.numeric(format(Date_parsed,"%j")))
+  mutate(Brood.rearing=coalesce(Brood.rearing,Brood.natal))
 
 Tb.dat<-merge(Tb.dat1,age2.nat.cf,by="BirdID",all = TRUE)
+Tb.dat<- Tb.dat %>%
+  mutate(
+    Date_chr=as.character(Date),
+    Date_parsed = as.Date(Date_chr, format = "%d/%m/%Y"),
+    doy=as.numeric(format(Date_parsed,"%j")))
 
 # make column to filter out birds with missing brood information later. These birds are those who hatch significantly later than their siblings.
 Tb.dat$keep_row<-!is.na(Tb.dat$Brood.natal)
@@ -63,6 +65,10 @@ nrow(Tb.dat.na)
 # just get columns we use
 Tb.dat.na<-Tb.dat.na[,c("BirdID","Brood.natal","Brood.rearing","Age","Year","Mass","max.temp","Air.temp","surv","Currentage_brood_size","doy")]
 
+# Birds to remove
+values_to_remove<-c("10821", "10827", "10829" ,"10911") # these birds have been removed as they hatched significantly later than siblings 
+Tb.dat.na <- subset(Tb.dat.na, !BirdID %in% values_to_remove)
+Tb.dat.na<-as.data.frame(Tb.dat.na)
 
 ## --------
 ## Read in and fix Pedigree
@@ -71,11 +77,10 @@ Tb.dat.na<-Tb.dat.na[,c("BirdID","Brood.natal","Brood.rearing","Age","Year","Mas
 Tb.ped<-read.csv("Data/Raw/pedto19_new.csv")[,1:3]
 colnames(Tb.ped)[1] <- "BirdID"
 
-# add in birds not already in pedigree
+# add in missing parents
 missing.birds<-cbind(unique(Tb.dat.na$BirdID[which(!Tb.dat.na$BirdID%in%Tb.ped[,1])]),NA,NA)
 colnames(missing.birds)<-colnames(Tb.ped)
 Tb.ped<-fix_ped(rbind(Tb.ped,missing.birds))
-
 
 ## --------
 ## Write data to csvs
@@ -83,3 +88,4 @@ Tb.ped<-fix_ped(rbind(Tb.ped,missing.birds))
 
 write.csv(Tb.ped,file="Data/Processed/ped_for_analysis.csv",row.names=FALSE)
 write.csv(Tb.dat.na,file="Data/Processed/data_for_analysis.csv",row.names=FALSE)
+
