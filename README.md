@@ -25,7 +25,8 @@ null_distributions.R contains a code for running a null distribution, used to es
 All data for the analyses
 
 ### Raw
-Contains raw data
+Contains raw data - make sure to use processed data for any analysis (see below)
+
 pedto19_new.csv is the pedigree data:
   - offspring = unique identifier for focal individual
   - Dam = unique identifier for mother
