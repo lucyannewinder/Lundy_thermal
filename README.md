@@ -1,5 +1,6 @@
 # Repository for 'Separating the genetic and environmental drivers of body temperature during the development of endothermy in an altricial bird'
 Authors: Lucy A. Winder, Jacob Hogger Gadsby, Eleanor Wellman, Joel L. Pick, Julia Schroeder, Mirre J.P. Simons, Terry Burke
+
 Contact email: l.winder2@exeter.ac.uk
 
 This repository contains the data and code for a study using thermal imaging of cross-fostered nestling house sparrows to separate genetic and environmental drivers of body temperature.
@@ -25,6 +26,7 @@ pedto19_new.csv is the pedigree data:
   - Dam = unique identifier for mother
   - Sire = unique identifier for father
   - Cohort = cohort year of focal individual
+    
 Tb.dat.csv is the raw data:
   - BirdID = unique identifier for focal individual
   - Brood.code = unique identifier for each brood focal individual was born into
@@ -55,6 +57,7 @@ pedto19_new.csv is the pedigree data:
   - Dam = unique identifier for mother
   - Sire = unique identifier for father
   - Cohort = cohort year of focal individual
+    
 data_for_analysis.csv is the processed data produced from 01_data.R:
   - BirdID = unique identifier for focal individual
   - Brood.natal = unique identifier for each brood focal individual was born into
