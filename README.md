@@ -9,11 +9,16 @@ This repository contains the data and code for a study using thermal imaging of 
 ## R
 All R code for the analyses. 
 
-01_data.R is data cleaning and processing.
+01_data.R is data cleaning and processing
+
 02_univariate.R contains models for estimating the proportion of variance for each age separately
+
 03_multivariate.R contains models for estimating body temperature across ontogeny
+
 04_survival.R contains models for estimating selective disappearance for body temperature and mass at each age
+
 05_tables_figures.R contains code for generating the figures and tables in the associated manuscript
+
 null_distributions.R contains a code for running a null distribution, used to estimate minimum detectable Va. 
 
 ## Data
@@ -52,7 +57,7 @@ Tb.dat.csv is the raw data:
 ### Processed
 Contains processed data used in the analysis
 
-pedto19_new.csv is the pedigree data:
+pedto19_new.csv is the pedigree data processed in 01_data.R:
   - offspring = unique identifier for focal individual
   - Dam = unique identifier for mother
   - Sire = unique identifier for father
